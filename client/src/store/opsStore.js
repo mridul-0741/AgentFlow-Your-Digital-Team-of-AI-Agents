@@ -146,16 +146,44 @@ export const useOpsStore = create((set) => ({
     }
 
     const newState = {
-      status: data.status ?? state.status,
-      logs:
-        data.logs !== undefined
-          ? Array.isArray(data.logs)
-            ? [...data.logs]
-            : state.logs
-          : state.logs,
-      agents: nextAgents,
-      output: data.output != null ? data.output : state.output,
-    };
+  status: data.status ?? state.status,
+
+  logs:
+    data.logs !== undefined
+      ? Array.isArray(data.logs)
+        ? [...data.logs]
+        : state.logs
+      : state.logs,
+
+  agents: nextAgents,
+
+  output: {
+    plan:
+      nextAgents.planner?.plan ||
+      nextAgents.planner?.output ||
+      '',
+
+    research:
+      nextAgents.researcher?.research ||
+      nextAgents.researcher?.output ||
+      '',
+
+    code:
+      nextAgents.developer?.implementation ||
+      nextAgents.developer?.output ||
+      '',
+
+    tests:
+      nextAgents.tester?.test_report ||
+      nextAgents.tester?.output ||
+      '',
+
+    report:
+      nextAgents.reporter?.final_report ||
+      nextAgents.reporter?.output ||
+      '',
+  },
+};
 
     console.log('💾 New state:', {
       status: newState.status,

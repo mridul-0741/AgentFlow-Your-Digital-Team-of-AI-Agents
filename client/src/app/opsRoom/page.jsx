@@ -1,5 +1,6 @@
 "use client"
 
+import ReactMarkdown from "react-markdown"
 import { useState, useEffect, useRef } from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
@@ -104,15 +105,32 @@ function StatCard({ label, value }) {
 }
 
 function OutputCard({ title, content }) {
-  const displayContent =
-    content && typeof content === 'object'
-      ? JSON.stringify(content, null, 2)
-      : content
+
+  let displayContent = content
+
+  // extract useful text from object outputs
+  if (content && typeof content === "object") {
+    displayContent =
+      content.plan ||
+      content.research ||
+      content.code ||
+      content.tests ||
+      content.report ||
+      content.output ||
+      JSON.stringify(content, null, 2)
+  }
 
   return (
     <div className="rounded-3xl border border-blue-500/10 bg-slate-950/80 p-5">
-      <p className="text-sm text-blue-300 uppercase tracking-[0.2em]">{title}</p>
-      <pre className="mt-3 min-h-[72px] whitespace-pre-wrap text-sm leading-6 text-slate-300">{displayContent}</pre>
+      <p className="text-sm text-blue-300 uppercase tracking-[0.2em]">
+        {title}
+      </p>
+
+      <div className="mt-4 prose prose-invert max-w-none prose-p:text-slate-300 prose-headings:text-white prose-strong:text-white prose-li:text-slate-300">
+        <ReactMarkdown>
+          {displayContent || "No output yet"}
+        </ReactMarkdown>
+      </div>
     </div>
   )
 }
@@ -216,9 +234,14 @@ const tasks = agents.map((agent) => {
       `${agent.displayName} is processing...`,
 
     description:
-      typeof agentState?.output === "string"
-        ? agentState.output
-        : JSON.stringify(agentState?.output || ""),
+  typeof agentState?.output === "string"
+    ? agentState.output.slice(0, 120)
+    : (
+        agentState?.output?.plan ||
+        agentState?.output?.research ||
+        agentState?.output?.code ||
+        ""
+      ).slice(0, 120),
 
     status: normalized,
 
