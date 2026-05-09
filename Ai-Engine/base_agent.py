@@ -349,11 +349,15 @@ class BaseAgent:
 
         try:
             await self.channel.declare_queue(self.next_queue, durable=True)
+            existing_outputs = self.get_previous_outputs(task_id)
+
+            existing_outputs[self.agent_name.lower()] = agent_output
+
             message = {
                 'task_id': task_id,
                 'input': task_input,
                 'agent': self.agent_name,
-                'previous_output': agent_output
+                'previous_outputs': existing_outputs
             }
             await self.channel.default_exchange.publish(
                 aio_pika.Message(body=json.dumps(message).encode()),
@@ -430,7 +434,8 @@ class BaseAgent:
                 self.log_activity(task_id, f"Starting {self.agent_name} execution", 'running')
 
                 # Get previous outputs
-                previous_outputs = self.get_previous_outputs(task_id)
+                # Get previous outputs directly from queue message
+                previous_outputs = data.get("previous_outputs", {})     
 
                 # Generate agent output
                 agent_output = await self.generate_output(task_id, task_input, previous_outputs)

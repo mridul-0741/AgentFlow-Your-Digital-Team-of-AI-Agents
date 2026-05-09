@@ -55,6 +55,9 @@ export const useOpsStore = create((set) => ({
     report: null,
   },
 
+  downloadUrl: null,
+  deploymentLink: null,
+
   setTask: (task) =>
     set({
       task,
@@ -112,6 +115,16 @@ export const useOpsStore = create((set) => ({
       },
     })),
 
+  setDownloadUrl: (url) =>
+    set({
+      downloadUrl: url,
+    }),
+
+  setDeploymentLink: (link) =>
+    set({
+      deploymentLink: link,
+    }),
+
   reset: () =>
     set({
       task: '',
@@ -130,6 +143,9 @@ export const useOpsStore = create((set) => ({
         tests: null,
         report: null,
       },
+
+      downloadUrl: null,
+      deploymentLink: null,
     }),
 
   updateFromServer: (data) => {
@@ -183,6 +199,9 @@ export const useOpsStore = create((set) => ({
       nextAgents.reporter?.output ||
       '',
   },
+
+  downloadUrl: data.downloadUrl ?? state.downloadUrl,
+  deploymentLink: data.deploymentLink ?? state.deploymentLink,
 };
 
     console.log('💾 New state:', {

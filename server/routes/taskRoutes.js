@@ -1,5 +1,13 @@
 import express from "express";
 import axios from "axios";
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+import path from "path";
+import fs from "fs";
+import { createZipArchive } from "../utils/createZip.js";
+import { deployProject } from "../services/deploymentService.js";
 
 const router = express.Router();
 
@@ -164,6 +172,68 @@ function startTaskPolling(taskId, io) {
         console.log(
           `[Polling #${pollCount}] Task ${taskId} finished with status: ${data.status}`
         );
+        console.log(`[Polling #${pollCount}] Final data structure:`, JSON.stringify(data, null, 2).slice(0, 500));
+
+        // Generate ZIP and deployment link on successful completion
+        let downloadUrl = null;
+        let deploymentLink = null;
+
+        if (data.status === "completed") {
+          try {
+            // Extract project info from developer agent output
+           const developerOutput =
+  data.output?.developer || {};
+            console.log(
+  "[DEBUG] FULL DATA STRUCTURE:",
+  JSON.stringify(data, null, 2)
+);
+            console.log(`[ZIP/Deployment] Developer output:`, developerOutput);
+
+            const projectId = developerOutput.project_id;
+            const projectDir = developerOutput.project_dir;
+
+            console.log(`[ZIP/Deployment] Extracted - projectId: ${projectId}, projectDir: ${projectDir}`);
+
+            if (projectId && projectDir) {
+              // Use relative path from AI-Engine to locate project
+             const aiEnginePath = path.resolve(process.cwd(), '..', 'Ai-Engine');
+              const fullProjectPath = path.join(aiEnginePath, projectDir);
+
+              console.log(`[ZIP/Deployment] Full project path: ${fullProjectPath}`);
+              console.log(`[ZIP/Deployment] Path exists: ${fs.existsSync(fullProjectPath)}`);
+
+              // Generate ZIP archive
+              try {
+                console.log(`[ZIP] Starting ZIP creation...`);
+                const zipResult = await createZipArchive(fullProjectPath, projectId);
+                downloadUrl = zipResult.downloadUrl;
+                console.log(`[ZIP] ✅ Generated successfully: ${downloadUrl}`);
+              } catch (zipError) {
+                console.error(`[ZIP] ❌ Failed:`, zipError);
+              }
+
+              // Attempt deployment
+              try {
+                console.log(`[Deployment] Starting deployment...`);
+                const deployResult = await deployProject(projectId, {
+                  name: data.input?.slice(0, 50) || `project-${projectId.slice(0, 8)}`
+                });
+                deploymentLink = deployResult.deploymentLink;
+                console.log(`[Deployment] ✅ Completed: ${deploymentLink}`);
+              } catch (deployError) {
+                console.error(`[Deployment] ❌ Failed:`, deployError);
+              }
+            } else {
+              console.warn(`[ZIP/Deployment] ⚠️ Missing project info - projectId: ${projectId}, projectDir: ${projectDir}`);
+              console.log(`[ZIP/Deployment] Full developer output:`, JSON.stringify(developerOutput, null, 2));
+            }
+          } catch (error) {
+            console.error(`[ZIP/Deployment] ❌ Outer error:`, error.message);
+            console.error(error.stack);
+          }
+        }
+
+        console.log(`[Workflow Complete] Final values - downloadUrl: ${downloadUrl}, deploymentLink: ${deploymentLink}`);
 
         io.to(`task-${taskId}`).emit(
           "workflow-complete",
@@ -172,6 +242,8 @@ function startTaskPolling(taskId, io) {
             status: data.status,
             output: data.output || {},
             agentStatus,
+            downloadUrl,
+            deploymentLink,
           }
         );
 

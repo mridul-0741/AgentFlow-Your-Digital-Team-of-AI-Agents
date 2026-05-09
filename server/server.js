@@ -1,8 +1,12 @@
 import express from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
+import path from "path";
+import { fileURLToPath } from "url";
 import testTaskRouter from "./routes/testTask.js";
 import taskRouter from "./routes/taskRoutes.js";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const app = express();
 const server = createServer(app);
@@ -32,6 +36,9 @@ app.use((req, res, next) => {
 
   next();
 });
+
+// Serve deliverables ZIP files
+app.use("/downloads", express.static(path.join(__dirname, "deliverables")));
 
 app.use("/api", taskRouter);
 app.use("/api", testTaskRouter);

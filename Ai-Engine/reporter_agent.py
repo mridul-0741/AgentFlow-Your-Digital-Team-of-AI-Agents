@@ -85,6 +85,8 @@ Format this as a professional project delivery report."""
                     'quality_score': '95%',  # Mock quality score
                     'completion_date': str(asyncio.get_event_loop().time())
                 },
+                'downloadUrl': None,  # Will be populated by backend after ZIP creation
+                'deploymentLink': None,  # Will be populated by backend after deployment
                 'timestamp': str(asyncio.get_event_loop().time())
             }
         except Exception as e:
@@ -97,6 +99,8 @@ Format this as a professional project delivery report."""
                     'status': 'error',
                     'error': str(e)
                 },
+                'downloadUrl': None,
+                'deploymentLink': None,
                 'timestamp': str(asyncio.get_event_loop().time())
             }
 

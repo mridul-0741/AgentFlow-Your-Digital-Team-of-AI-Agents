@@ -5,11 +5,13 @@ import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Heading } from '@/components/common/Heading';
-import { CheckCircle2 } from 'lucide-react';
+import { CheckCircle2, Download, ExternalLink } from 'lucide-react';
 
 export function OutputPanel() {
   const output = useOpsStore((state) => state.output);
   const status = useOpsStore((state) => state.status);
+  const downloadUrl = useOpsStore((state) => state.downloadUrl);
+  const deploymentLink = useOpsStore((state) => state.deploymentLink);
 
   const hasOutput = Object.values(output).some((v) => v !== null);
 
@@ -94,6 +96,33 @@ export function OutputPanel() {
               )}
             </TabsContent>
           </ScrollArea>
+
+          {/* Deliverables Actions */}
+          {status === 'completed' && (
+            <div className="mt-4 flex gap-3">
+              {downloadUrl && (
+                <a
+                  href={downloadUrl.startsWith('http') ? downloadUrl : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${downloadUrl}`}
+                  download
+                  className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors"
+                >
+                  <Download className="w-4 h-4" />
+                  Download Deliverables ZIP
+                </a>
+              )}
+              {deploymentLink && (
+                <a
+                  href={deploymentLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  Open Live Demo
+                </a>
+              )}
+            </div>
+          )}
         </Tabs>
       )}
     </div>

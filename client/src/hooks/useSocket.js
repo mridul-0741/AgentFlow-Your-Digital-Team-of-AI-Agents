@@ -6,7 +6,7 @@ import { useOpsStore } from '@/store/opsStore';
 
 export function useSocket(taskId) {
   const socketRef = useRef(null);
-  const { addLog, updateAgentStatus, setStatus, setOutput } = useOpsStore();
+  const { addLog, updateAgentStatus, setStatus, setOutput, setDownloadUrl, setDeploymentLink } = useOpsStore();
 
   useEffect(() => {
     if (!taskId) {
@@ -124,6 +124,12 @@ export function useSocket(taskId) {
       setStatus('completed');
       if (data.output) {
         setOutput(data.output);
+      }
+      if (data.downloadUrl) {
+        setDownloadUrl(data.downloadUrl);
+      }
+      if (data.deploymentLink) {
+        setDeploymentLink(data.deploymentLink);
       }
     });
 
