@@ -53,7 +53,7 @@ export function OutputPanel() {
             </TabsTrigger>
           </TabsList>
 
-          <ScrollArea className="flex-1 mt-4 rounded-lg border border-border/50">
+          <ScrollArea className="h-[600px] mt-4 rounded-lg border border-border/50 overflow-y-auto">
             <TabsContent value="plan" className="p-4 m-0">
               {output.plan ? (
                 <OutputSection data={output.plan} />
@@ -102,7 +102,11 @@ export function OutputPanel() {
 
 function OutputSection({ data }: { data: any }) {
   if (typeof data === 'string') {
-    return <pre className="text-xs whitespace-pre-wrap text-foreground">{data}</pre>;
+    return (
+  <pre className="text-xs whitespace-pre-wrap text-foreground overflow-x-auto max-h-[500px] overflow-y-auto">
+    {data}
+  </pre>
+);
   }
 
   if (Array.isArray(data)) {

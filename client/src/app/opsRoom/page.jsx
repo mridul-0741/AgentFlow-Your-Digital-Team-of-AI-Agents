@@ -119,7 +119,6 @@ function OutputCard({ title, content }) {
 
 export default function OpsRoom() {
   const router = useRouter()
-  const logsEndRef = useRef(null)
 
   // Subscribe to store with individual selectors for proper reactivity
   const taskId = useOpsStore((state) => state.taskId)
@@ -140,23 +139,16 @@ export default function OpsRoom() {
   // Fallback polling if WebSocket fails
   useTaskPolling(taskId)
 
-  useEffect(() => {
-    console.log('🎨 Render: opsRoom updated with:', {
-      taskId,
-      status,
-      logsCount: logs.length,
-      agentStatuses: Object.entries(agentStatus || {}).map(([k, v]) => ({ [k]: v.status })),
-    });
-    if (logsEndRef.current) {
-      logsEndRef.current.scrollIntoView({ behavior: "smooth" })
-    }
-  }, [logs, status, taskId, agentStatus])
-
-  const toggleAgent = (id) => {
-    setSelectedAgents((prev) =>
-      prev.includes(id) ? prev.filter((a) => a !== id) : [...prev, id]
-    )
-  }
+ useEffect(() => {
+  console.log('Render: opsRoom updated with:', {
+    taskId,
+    status,
+    logsCount: logs.length,
+    agentStatuses: Object.entries(agentStatus || {}).map(([k, v]) => ({
+      [k]: v.status,
+    })),
+  });
+}, [logs, status, taskId, agentStatus]);
 
   const handleSubmitTask = async (e) => {
     e.preventDefault()
@@ -341,7 +333,6 @@ const tasks = agents.map((agent) => {
                   ))
                 )}
               </div>
-              <div ref={logsEndRef} />
             </div>
           </div>
         </div>
