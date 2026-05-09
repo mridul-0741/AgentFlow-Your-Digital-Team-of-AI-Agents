@@ -1,0 +1,18 @@
+{
+  "name": "generated-project-5ab61524-195b-4e14-a229-4018b3057c5b",
+  "version": "1.0.0",
+  "description": "Generated project for: build a to do list app for me...",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "test": "jest"
+  },
+  "keywords": [
+    "generated",
+    "ai",
+    "agentflow"
+  ],
+  "author": "AgentFlow AI",
+  "license": "MIT"
+}

@@ -105,7 +105,6 @@ function StatCard({ label, value }) {
 }
 
 function OutputCard({ title, content }) {
-
   let displayContent = content
 
   // extract useful text from object outputs
@@ -121,14 +120,33 @@ function OutputCard({ title, content }) {
   }
 
   return (
-    <div className="rounded-3xl border border-blue-500/10 bg-slate-950/80 p-5">
+    <div className="rounded-3xl border border-blue-500/10 bg-slate-950/80 p-5 overflow-hidden min-w-0">
       <p className="text-sm text-blue-300 uppercase tracking-[0.2em]">
         {title}
       </p>
 
-      <div className="mt-4 prose prose-invert max-w-none prose-p:text-slate-300 prose-headings:text-white prose-strong:text-white prose-li:text-slate-300">
+      <div
+        className="
+          mt-4
+          prose
+          prose-invert
+          max-w-none
+          overflow-x-auto
+          overflow-y-hidden
+          break-words
+          whitespace-pre-wrap
+          prose-pre:overflow-x-auto
+          prose-pre:max-w-full
+          prose-code:break-words
+          prose-code:whitespace-pre-wrap
+          prose-p:text-slate-300
+          prose-headings:text-white
+          prose-strong:text-white
+          prose-li:text-slate-300
+        "
+      >
         <ReactMarkdown>
-          {displayContent || "No output yet"}
+          {String(displayContent || "No output yet")}
         </ReactMarkdown>
       </div>
     </div>
@@ -278,7 +296,7 @@ const tasks = agents.map((agent) => {
         </div>
       </div>
 
-      <div className="flex h-[calc(100vh-64px)]">
+      <div className="flex h-[calc(100vh-64px)] overflow-hidden">
         <div className="w-1/3 border-r border-blue-500/20 bg-white/5 backdrop-blur-xl flex flex-col relative">
           <button
             onClick={() => setShowNewChat(true)}
@@ -360,7 +378,7 @@ const tasks = agents.map((agent) => {
           </div>
         </div>
 
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
           <div className="border-b border-blue-500/20 bg-white/5 px-8 py-4 flex flex-wrap gap-4">
             {agents.map((agent) => {
               const currentStatus = agentStatus?.[agent.id]?.status || "idle"
@@ -386,7 +404,7 @@ const tasks = agents.map((agent) => {
             })}
           </div>
 
-          <div className="flex-1 overflow-y-auto p-8 space-y-10">
+          <div className="flex-1 overflow-y-auto overflow-x-hidden p-8 space-y-10">
             <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
               <div className="rounded-3xl border border-blue-500/20 bg-slate-900/80 p-6 shadow-xl shadow-blue-950/20">
                 <div className="flex items-center justify-between gap-4">
@@ -448,7 +466,50 @@ const tasks = agents.map((agent) => {
                 <OutputCard title="Research" content={agentStatus?.researcher?.output || "Research highlights will appear here."} />
                 <OutputCard title="Code" content={agentStatus?.developer?.output || "Implementation summary will appear here."} />
                 <OutputCard title="Tests" content={agentStatus?.tester?.output || "QA notes will appear here."} />
-                <OutputCard title="Report" content={agentStatus?.reporter?.output || "Report brief will appear here."} />
+                <div className="sm:col-span-2">
+  <OutputCard
+    title="Report"
+    content={agentStatus?.reporter?.output || "Report brief will appear here."}
+  />
+
+  {(() => {
+    const reportOutput = agentStatus?.reporter?.output || {}
+
+    const deploymentLink =
+      reportOutput?.deploymentLink ||
+      reportOutput?.deliverables?.deploymentLink
+
+    const downloadUrl =
+      reportOutput?.downloadUrl ||
+      reportOutput?.deliverables?.downloadUrl
+
+    return (
+      <div className="flex flex-wrap gap-4 mt-6">
+        {downloadUrl && (
+          <a
+            href={`http://localhost:5001${downloadUrl}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-5 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-semibold transition"
+          >
+            Download ZIP
+          </a>
+        )}
+
+        {deploymentLink && (
+          <a
+            href={deploymentLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-5 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold transition"
+          >
+            Open Deployment
+          </a>
+        )}
+      </div>
+    )
+  })()}
+</div>
               </div>
             </div>
           </div>

@@ -9,6 +9,7 @@ import taskRouter from "./routes/taskRoutes.js";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const app = express();
+app.use('/downloads', express.static('deliverables'));
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
