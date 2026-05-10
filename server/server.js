@@ -3,8 +3,14 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import path from "path";
 import { fileURLToPath } from "url";
+import dotenv from "dotenv";
+import connectDB from "./config/database.js";
 import testTaskRouter from "./routes/testTask.js";
 import taskRouter from "./routes/taskRoutes.js";
+import authRouter from "./routes/authRoutes.js";
+
+// Load env variables
+dotenv.config();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -28,7 +34,7 @@ app.use((req, res, next) => {
   } else {
     res.header("Access-Control-Allow-Origin", "*");
   }
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
   res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
 
   if (req.method === "OPTIONS") {
@@ -41,6 +47,7 @@ app.use((req, res, next) => {
 // Serve deliverables ZIP files
 app.use("/downloads", express.static(path.join(__dirname, "deliverables")));
 
+app.use("/api", authRouter);
 app.use("/api", taskRouter);
 app.use("/api", testTaskRouter);
 app.get("/health", (req, res) => {
@@ -72,6 +79,17 @@ io.on('connection', (socket) => {
 // Export io for use in routes
 app.set('io', io);
 
-server.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+// Connect to MongoDB and start server
+const startServer = async () => {
+  try {
+    await connectDB();
+    server.listen(PORT, () => {
+      console.log(`Server is running on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  }
+};
+
+startServer();

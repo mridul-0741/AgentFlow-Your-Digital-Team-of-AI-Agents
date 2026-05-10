@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import { getTasks } from "@/services/api";
 import Link from "next/link";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 
-export default function TasksPage() {
+function TasksPageContent() {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -69,5 +70,13 @@ export default function TasksPage() {
         </div>
       )}
     </section>
+  );
+}
+
+export default function TasksPage() {
+  return (
+    <ProtectedRoute>
+      <TasksPageContent />
+    </ProtectedRoute>
   );
 }

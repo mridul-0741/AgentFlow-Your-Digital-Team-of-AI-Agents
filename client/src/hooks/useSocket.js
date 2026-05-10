@@ -4,6 +4,11 @@ import { useEffect, useRef } from 'react';
 import io from 'socket.io-client';
 import { useOpsStore } from '@/store/opsStore';
 
+const defaultSocketUrl = typeof window !== 'undefined' && window.location.port === '3001'
+  ? 'http://localhost:5001'
+  : 'http://localhost:5000';
+const SOCKET_URL_BASE = process.env.NEXT_PUBLIC_SOCKET_URL || defaultSocketUrl;
+
 export function useSocket(taskId) {
   const socketRef = useRef(null);
   const { addLog, updateAgentStatus, setStatus, setOutput, setDownloadUrl, setDeploymentLink } = useOpsStore();
@@ -18,7 +23,7 @@ export function useSocket(taskId) {
     }
 
     // Connect to Socket.IO server
-    const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:5000';
+    const SOCKET_URL = SOCKET_URL_BASE;
     
     if (!socketRef.current) {
       socketRef.current = io(SOCKET_URL, {

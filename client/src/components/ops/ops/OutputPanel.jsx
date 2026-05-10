@@ -7,6 +7,11 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Heading } from '@/components/common/Heading';
 import { CheckCircle2, Download, ExternalLink } from 'lucide-react';
 
+const defaultApiBase = typeof window !== 'undefined' && window.location.port === '3001'
+  ? 'http://localhost:5001'
+  : 'http://localhost:5000';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || defaultApiBase;
+
 export function OutputPanel() {
   const output = useOpsStore((state) => state.output);
   const status = useOpsStore((state) => state.status);
@@ -102,7 +107,7 @@ export function OutputPanel() {
             <div className="mt-4 flex gap-3">
               {downloadUrl && (
                 <a
-                  href={downloadUrl.startsWith('http') ? downloadUrl : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${downloadUrl}`}
+                  href={downloadUrl.startsWith('http') ? downloadUrl : `${API_BASE}${downloadUrl}`}
                   download
                   className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors"
                 >

@@ -1,8 +1,8 @@
-import Image from "next/image";
-import HomePage from "./home/page";
+import { redirect } from 'next/navigation';
 
 function AppPage() {
-  return <HomePage />
+  // Redirect to home by default
+  redirect('/home');
 }
 
 export default AppPage

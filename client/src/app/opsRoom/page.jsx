@@ -8,6 +8,7 @@ import { Plus } from "lucide-react"
 
 import { useOpsStore } from "../../store/opsStore"
 import { submitTask } from "@/services/api"
+import { ProtectedRoute } from "@/components/ProtectedRoute"
 import { useTaskPolling } from "@/hooks/useTaskPolling"
 import { useSocket } from "@/hooks/useSocket"
 
@@ -225,6 +226,42 @@ export default function OpsRoom() {
     }
   }
 
+  return (
+    <ProtectedRoute>
+      <OpsRoomContent
+        router={router}
+        taskId={taskId}
+        status={status}
+        logs={logs}
+        agentStatus={agentStatus}
+        handleSubmitTask={handleSubmitTask}
+        taskInput={taskInput}
+        setTaskInput={setTaskInput}
+        isSubmitting={isSubmitting}
+        showNewChat={showNewChat}
+        setShowNewChat={setShowNewChat}
+        selectedAgents={selectedAgents}
+        setSelectedAgents={setSelectedAgents}
+      />
+    </ProtectedRoute>
+  )
+}
+
+function OpsRoomContent({
+  router,
+  taskId,
+  status,
+  logs,
+  agentStatus,
+  handleSubmitTask,
+  taskInput,
+  setTaskInput,
+  isSubmitting,
+  showNewChat,
+  setShowNewChat,
+  selectedAgents,
+  setSelectedAgents,
+}){
   /* -------- DERIVE TASKS FROM REAL LOGS -------- */
 const tasks = agents.map((agent) => {
 

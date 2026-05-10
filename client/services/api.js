@@ -1,4 +1,7 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const defaultApiBase = typeof window !== 'undefined' && window.location.port === '3001'
+  ? 'http://localhost:5001'
+  : 'http://localhost:5000';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || defaultApiBase;
 
 async function handleResponse(response) {
   if (!response.ok) {

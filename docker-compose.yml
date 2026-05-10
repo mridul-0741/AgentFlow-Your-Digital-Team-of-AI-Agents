@@ -255,6 +255,7 @@ services:
       - AI_ENGINE_URL=http://ai-engine:8000
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - MONGODB_URI=${MONGODB_URI}
     ports:
       - "5001:5000"
     depends_on:
