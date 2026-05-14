@@ -22,6 +22,7 @@ from orchestrator.orchestrator import Orchestrator
 
 
 import psycopg2
+from psycopg2 import pool
 from psycopg2.extras import RealDictCursor
 import redis
 import aio_pika
@@ -61,36 +62,61 @@ AGENT_ROLE_BY_NAME = {
 }
 
 # ========== RabbitMQ Connection ==========
+# ========== RabbitMQ Connection ==========
 rabbitmq_connection = None
 rabbitmq_channel = None
 
 async def get_rabbitmq_connection():
     global rabbitmq_connection, rabbitmq_channel
-    if not rabbitmq_connection:
+
+    if rabbitmq_channel:
+        return rabbitmq_channel
+
+    try:
         rabbitmq_connection = await aio_pika.connect_robust(
             f"amqp://{RABBITMQ_USER}:{RABBITMQ_PASSWORD}@{RABBITMQ_HOST}/"
         )
+
         rabbitmq_channel = await rabbitmq_connection.channel()
+
         await rabbitmq_channel.set_qos(prefetch_count=1)
-    return rabbitmq_channel
+
+        logger.info("RabbitMQ connected successfully")
+
+        return rabbitmq_channel
+
+    except Exception as e:
+        logger.error(f"RabbitMQ connection failed: {e}")
+        return None
 
 # ========== Database Utilities ==========
 class DatabaseConnection:
+    _pool = None
+
     @staticmethod
     def get_connection():
-        """Get database connection"""
-        try:
-            conn_string = (
-                f"host={DB_HOST} "
-                f"port={DB_PORT} "
-                f"dbname={DB_NAME} "
-                f"user={DB_USER} "
-                f"password={DB_PASSWORD}"
-            )
-            return psycopg2.connect(conn_string)
-        except Exception as e:
-            logger.error(f"Database connection failed: {e}")
-            raise
+        """Get database connection from pool"""
+        if DatabaseConnection._pool is None:
+            try:
+                conn_string = (
+                    f"host={DB_HOST} "
+                    f"port={DB_PORT} "
+                    f"dbname={DB_NAME} "
+                    f"user={DB_USER} "
+                    f"password={DB_PASSWORD}"
+                )
+                DatabaseConnection._pool = pool.SimpleConnectionPool(1, 20, conn_string)
+                logger.info("Database connection pool created")
+            except Exception as e:
+                logger.error(f"Database connection pool creation failed: {e}")
+                raise
+        return DatabaseConnection._pool.getconn()
+
+    @staticmethod
+    def release_connection(conn):
+        """Release connection back to pool"""
+        if DatabaseConnection._pool:
+            DatabaseConnection._pool.putconn(conn)
 
 # ========== Redis Client ==========
 try:
@@ -127,10 +153,15 @@ class TaskStatusResponse(BaseModel):
 # ========== Async Lifespan ==========
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup
     logger.info("Starting AgentFlow AI Engine")
+
     init_database()
-    await get_rabbitmq_connection()
+
+    try:
+        await get_rabbitmq_connection()
+    except Exception as e:
+        logger.warning(f"RabbitMQ startup skipped: {e}")
+
     yield
     # Shutdown
     if rabbitmq_connection:
@@ -224,7 +255,7 @@ def init_database():
             conn.rollback()
     finally:
         if conn:
-            conn.close()
+            DatabaseConnection.release_connection(conn)
 
 # ========== Agent Engine ==========
 class AgentEngine:
@@ -259,7 +290,7 @@ class AgentEngine:
             logger.error(f"Failed to log agent activity: {e}")
         finally:
             if conn:
-                conn.close()
+                DatabaseConnection.release_connection(conn)
 
     @staticmethod
     def update_agent_status(task_id: str, agent: str, status: str, output: Dict = None):
@@ -284,7 +315,7 @@ class AgentEngine:
             logger.error(f"Failed to update agent status: {e}")
         finally:
             if conn:
-                conn.close()
+                DatabaseConnection.release_connection(conn)
 
     @staticmethod
     async def publish_to_queue(queue_name: str, message: Dict):
@@ -366,7 +397,7 @@ class AgentEngine:
             )
             conn.commit()
             cursor.close()
-            conn.close()
+            DatabaseConnection.release_connection(conn)
             
             # Log workflow start
             AgentEngine.log_agent_activity(task_id, 'Orchestrator', 'Workflow started', 'running')
@@ -401,7 +432,7 @@ class AgentEngine:
         finally:
             if conn:
                 try:
-                    conn.close()
+                    DatabaseConnection.release_connection(conn)
                 except:
                     pass
 
@@ -441,7 +472,7 @@ class AgentEngine:
                     pass
         finally:
             if conn:
-                conn.close()
+                DatabaseConnection.release_connection(conn)
 
 # ========== API Routes ==========
 
@@ -482,7 +513,7 @@ async def create_task(request: TaskRequest, background_tasks: BackgroundTasks):
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         if conn:
-            conn.close()
+            DatabaseConnection.release_connection(conn)
 
 @app.get("/api/task/{task_id}", response_model=TaskStatusResponse)
 async def get_task_status(task_id: str):
@@ -556,7 +587,7 @@ async def get_task_status(task_id: str):
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         if conn:
-            conn.close()
+            DatabaseConnection.release_connection(conn)
 
 @app.get("/api/tasks")
 async def get_all_tasks():
@@ -591,7 +622,7 @@ async def get_all_tasks():
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         if conn:
-            conn.close()
+            DatabaseConnection.release_connection(conn)
 
 @app.get("/api/memory/{task_id}")
 async def get_memory(task_id: str):
@@ -624,7 +655,7 @@ async def get_memory(task_id: str):
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         if conn:
-            conn.close()
+            DatabaseConnection.release_connection(conn)
 
 @app.get("/api/health")
 async def health_check():
@@ -633,7 +664,7 @@ async def health_check():
 
     try:
         conn = DatabaseConnection.get_connection()
-        conn.close()
+        DatabaseConnection.release_connection(conn)
         components.append('database')
     except:
         pass

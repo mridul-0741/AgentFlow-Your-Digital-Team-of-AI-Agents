@@ -72,8 +72,7 @@ function startTaskPolling(taskId, io) {
       const data = response.data;
 
       console.log(
-        `[Polling #${pollCount}] FULL RESPONSE:`,
-        JSON.stringify(data, null, 2)
+        `[Polling #${pollCount}] Task ${taskId} status: ${data.status}`
       );
 
       const agentStatus = buildAgentStatus(data);
@@ -267,7 +266,7 @@ function startTaskPolling(taskId, io) {
 
       // Continue polling on errors
     }
-  }, 1000);
+  }, 5000);
 
   taskPollingIntervals.set(taskId, pollInterval);
 
