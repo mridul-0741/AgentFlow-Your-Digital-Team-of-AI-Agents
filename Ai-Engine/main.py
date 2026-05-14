@@ -96,20 +96,35 @@ class DatabaseConnection:
     @staticmethod
     def get_connection():
         """Get database connection from pool"""
+    
         if DatabaseConnection._pool is None:
             try:
-                conn_string = (
-                    f"host={DB_HOST} "
-                    f"port={DB_PORT} "
-                    f"dbname={DB_NAME} "
-                    f"user={DB_USER} "
-                    f"password={DB_PASSWORD}"
-                )
-                DatabaseConnection._pool = pool.SimpleConnectionPool(1, 20, conn_string)
+                DATABASE_URL = os.getenv("DATABASE_URL")
+
+                if DATABASE_URL:
+                    DatabaseConnection._pool = pool.SimpleConnectionPool(
+                        1,
+                        20,
+                        dsn=DATABASE_URL
+                    )
+                else:
+                    logger.info("DATABASE_URL not found in environment variables. Falling back to individual parameters.")
+                    DatabaseConnection._pool = pool.SimpleConnectionPool(
+                        1,
+                        20,
+                        host=DB_HOST,
+                        port=int(DB_PORT),
+                        database=DB_NAME,
+                        user=DB_USER,
+                        password=DB_PASSWORD
+                    )
+
                 logger.info("Database connection pool created")
+
             except Exception as e:
                 logger.error(f"Database connection pool creation failed: {e}")
                 raise
+
         return DatabaseConnection._pool.getconn()
 
     @staticmethod

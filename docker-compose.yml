@@ -55,6 +55,7 @@ services:
       context: ./Ai-Engine
       dockerfile: Dockerfile
     environment:
+      - DATABASE_URL=${DATABASE_URL}
       - DB_HOST=postgres
       - DB_PORT=5432
       - DB_NAME=agentflow
@@ -92,6 +93,7 @@ services:
       dockerfile: Dockerfile
     command: python planner_agent.py
     environment:
+      - DATABASE_URL=${DATABASE_URL}
       - DB_HOST=postgres
       - DB_PORT=5432
       - DB_NAME=agentflow
@@ -124,6 +126,7 @@ services:
       dockerfile: Dockerfile
     command: python researcher_agent.py
     environment:
+      - DATABASE_URL=${DATABASE_URL}
       - DB_HOST=postgres
       - DB_PORT=5432
       - DB_NAME=agentflow
@@ -156,6 +159,7 @@ services:
       dockerfile: Dockerfile
     command: python developer_agent.py
     environment:
+      - DATABASE_URL=${DATABASE_URL}
       - DB_HOST=postgres
       - DB_PORT=5432
       - DB_NAME=agentflow
@@ -188,6 +192,7 @@ services:
       dockerfile: Dockerfile
     command: python tester_agent.py
     environment:
+      - DATABASE_URL=${DATABASE_URL}
       - DB_HOST=postgres
       - DB_PORT=5432
       - DB_NAME=agentflow
@@ -220,6 +225,7 @@ services:
       dockerfile: Dockerfile
     command: python reporter_agent.py
     environment:
+      - DATABASE_URL=${DATABASE_URL}
       - DB_HOST=postgres
       - DB_PORT=5432
       - DB_NAME=agentflow

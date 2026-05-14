@@ -40,13 +40,17 @@ class Orchestrator:
         self.channel = None
         
         # Database connection for agent status
-        self.db_config = {
-            'host': os.getenv('DB_HOST', 'localhost'),
-            'port': os.getenv('DB_PORT', '5432'),
-            'dbname': os.getenv('DB_NAME', 'agentflow'),
-            'user': os.getenv('DB_USER', 'postgres'),
-            'password': os.getenv('DB_PASSWORD', 'postgres')
-        }
+        database_url = os.getenv('DATABASE_URL')
+        if database_url:
+            self.db_config = {'dsn': database_url}
+        else:
+            self.db_config = {
+                'host': os.getenv('DB_HOST', 'localhost'),
+                'port': os.getenv('DB_PORT', '5432'),
+                'dbname': os.getenv('DB_NAME', 'agentflow'),
+                'user': os.getenv('DB_USER', 'postgres'),
+                'password': os.getenv('DB_PASSWORD', 'postgres')
+            }
         
         # Callback for status updates
         self.on_agent_status_change = on_agent_status_change

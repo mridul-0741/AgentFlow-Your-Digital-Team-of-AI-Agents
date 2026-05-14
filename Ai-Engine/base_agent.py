@@ -47,6 +47,10 @@ class DatabaseConnection:
     def get_connection():
         """Get database connection"""
         try:
+            database_url = os.getenv("DATABASE_URL")
+            if database_url:
+                return psycopg2.connect(database_url)
+
             conn_string = (
                 f"host={DB_HOST} "
                 f"port={DB_PORT} "
