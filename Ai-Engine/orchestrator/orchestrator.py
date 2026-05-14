@@ -36,6 +36,7 @@ class Orchestrator:
         self.rabbitmq_host = os.getenv('RABBITMQ_HOST', 'localhost')
         self.rabbitmq_user = os.getenv('RABBITMQ_USER', 'guest')
         self.rabbitmq_password = os.getenv('RABBITMQ_PASSWORD', 'guest')
+        self.rabbitmq_url = os.getenv("RABBITMQ_URL")
         self.connection = None
         self.channel = None
         
@@ -55,11 +56,17 @@ class Orchestrator:
         # Callback for status updates
         self.on_agent_status_change = on_agent_status_change
 
+    def _get_db_connection(self):
+        if self.database_url:
+            return psycopg2.connect(self.database_url)
+        return psycopg2.connect(**self.db_config)
+
     async def connect_rabbitmq(self):
         """Connect to RabbitMQ for publishing messages"""
         if not self.connection:
+            rabbitmq_dsn = self.rabbitmq_url or f"amqp://{self.rabbitmq_user}:{self.rabbitmq_password}@{self.rabbitmq_host}/"
             self.connection = await aio_pika.connect_robust(
-                f"amqp://{self.rabbitmq_user}:{self.rabbitmq_password}@{self.rabbitmq_host}/"
+                rabbitmq_dsn
             )
             self.channel = await self.connection.channel()
             await self.channel.set_qos(prefetch_count=1)
@@ -84,7 +91,7 @@ class Orchestrator:
         """Notify about agent status change and save to database"""
         # Save to database
         try:
-            conn = psycopg2.connect(**self.db_config)
+            conn = self._get_db_connection()
             cursor = conn.cursor()
             
             # Insert or update agent status

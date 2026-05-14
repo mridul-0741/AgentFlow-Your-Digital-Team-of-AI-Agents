@@ -39,6 +39,7 @@ DB_PORT = os.getenv('DB_PORT', '5432')
 DB_NAME = os.getenv('DB_NAME', 'agentflow')
 DB_USER = os.getenv('DB_USER', 'postgres')
 DB_PASSWORD = os.getenv('DB_PASSWORD', 'postgres')
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 REDIS_HOST = os.getenv('REDIS_HOST', 'localhost')
 REDIS_PORT = int(os.getenv('REDIS_PORT', '6379'))
@@ -46,6 +47,7 @@ REDIS_PORT = int(os.getenv('REDIS_PORT', '6379'))
 RABBITMQ_HOST = os.getenv('RABBITMQ_HOST', 'localhost')
 RABBITMQ_USER = os.getenv('RABBITMQ_USER', 'guest')
 RABBITMQ_PASSWORD = os.getenv('RABBITMQ_PASSWORD', 'guest')
+RABBITMQ_URL = os.getenv("RABBITMQ_URL")
 
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 OPENAI_MODEL = os.getenv('OPENAI_MODEL', 'gpt-3.5-turbo')
@@ -73,8 +75,9 @@ async def get_rabbitmq_connection():
         return rabbitmq_channel
 
     try:
+        rabbitmq_dsn = RABBITMQ_URL or f"amqp://{RABBITMQ_USER}:{RABBITMQ_PASSWORD}@{RABBITMQ_HOST}/"
         rabbitmq_connection = await aio_pika.connect_robust(
-            f"amqp://{RABBITMQ_USER}:{RABBITMQ_PASSWORD}@{RABBITMQ_HOST}/"
+            rabbitmq_dsn
         )
 
         rabbitmq_channel = await rabbitmq_connection.channel()
@@ -99,8 +102,6 @@ class DatabaseConnection:
     
         if DatabaseConnection._pool is None:
             try:
-                DATABASE_URL = os.getenv("DATABASE_URL")
-
                 if DATABASE_URL:
                     DatabaseConnection._pool = pool.SimpleConnectionPool(
                         1,
@@ -108,6 +109,11 @@ class DatabaseConnection:
                         dsn=DATABASE_URL
                     )
                 else:
+                    if os.getenv("RAILWAY_ENVIRONMENT") or os.getenv("RAILWAY_PROJECT_ID"):
+                        raise RuntimeError(
+                            "DATABASE_URL is missing in Railway runtime. Refusing to fall back to localhost:5432."
+                        )
+
                     logger.info("DATABASE_URL not found in environment variables. Falling back to individual parameters.")
                     DatabaseConnection._pool = pool.SimpleConnectionPool(
                         1,

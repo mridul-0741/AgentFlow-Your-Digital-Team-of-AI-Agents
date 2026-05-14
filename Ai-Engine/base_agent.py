@@ -34,6 +34,7 @@ REDIS_PORT = int(os.getenv('REDIS_PORT', '6379'))
 RABBITMQ_HOST = os.getenv('RABBITMQ_HOST', 'localhost')
 RABBITMQ_USER = os.getenv('RABBITMQ_USER', 'guest')
 RABBITMQ_PASSWORD = os.getenv('RABBITMQ_PASSWORD', 'guest')
+RABBITMQ_URL = os.getenv("RABBITMQ_URL")
 
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 OPENAI_MODEL = os.getenv('OPENAI_MODEL', 'gpt-3.5-turbo')
@@ -141,8 +142,9 @@ class BaseAgent:
 
     async def connect_rabbitmq(self):
         """Connect to RabbitMQ"""
+        rabbitmq_dsn = RABBITMQ_URL or f"amqp://{RABBITMQ_USER}:{RABBITMQ_PASSWORD}@{RABBITMQ_HOST}/"
         self.connection = await aio_pika.connect_robust(
-            f"amqp://{RABBITMQ_USER}:{RABBITMQ_PASSWORD}@{RABBITMQ_HOST}/"
+            rabbitmq_dsn
         )
         self.channel = await self.connection.channel()
         await self.channel.set_qos(prefetch_count=1)
