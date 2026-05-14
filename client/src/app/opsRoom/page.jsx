@@ -31,6 +31,7 @@ const agents = [
 const statusMap = {
   idle: { label: "Waiting", dot: "bg-slate-500", text: "text-slate-300" },
   pending: { label: "Queued", dot: "bg-slate-500", text: "text-slate-300" },
+  queued: { label: "Queued", dot: "bg-amber-400", text: "text-amber-200" },
   todo: { label: "Waiting", dot: "bg-slate-500", text: "text-slate-300" },
   running: { label: "Running", dot: "bg-sky-400 animate-pulse", text: "text-sky-200" },
   done: { label: "Completed", dot: "bg-emerald-400", text: "text-emerald-200" },
@@ -58,9 +59,10 @@ function normalizeStatus(status) {
   if (
     status === "todo" ||
     status === "pending" ||
+    status === "queued" ||
     status === "idle"
   ) {
-    return "todo"
+    return status === "queued" ? "queued" : "todo"
   }
 
   return status
@@ -460,8 +462,8 @@ const tasks = agents.map((agent) => {
                           <p className="text-white font-semibold">{task.assignedTo}</p>
                           <p className="mt-1 text-sm text-slate-400">{task.title}</p>
                         </div>
-                        <span className={`rounded-full px-3 py-1 text-xs font-semibold ${task.status === "completed" ? "bg-emerald-500/15 text-emerald-200" : task.status === "running" ? "bg-sky-500/15 text-sky-200" : "bg-slate-700/20 text-slate-300"}`}>
-                          {task.status === "completed" ? "Completed" : task.status === "running" ? "Running" : "Waiting"}
+                        <span className={`rounded-full px-3 py-1 text-xs font-semibold ${task.status === "completed" ? "bg-emerald-500/15 text-emerald-200" : task.status === "running" ? "bg-sky-500/15 text-sky-200" : task.status === "queued" ? "bg-amber-500/15 text-amber-200" : "bg-slate-700/20 text-slate-300"}`}>
+                          {task.status === "completed" ? "Completed" : task.status === "running" ? "Running" : task.status === "queued" ? "Queued" : "Waiting"}
                         </span>
                       </div>
                       <p className="mt-3 text-sm text-slate-400">{task.description || "Awaiting agent activity..."}</p>

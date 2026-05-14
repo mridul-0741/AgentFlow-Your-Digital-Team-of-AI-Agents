@@ -185,9 +185,9 @@ Next agent (one word only):"""
             # ---------------- ORCHESTRATOR START ----------------
             self._notify_agent_status(
                 "planner",
-                "running",
+                "queued",
                 None,
-                "Planner started processing task"
+                "Task queued for planner"
             )
 
             logger.info("Planner workflow initialized")
@@ -201,14 +201,6 @@ Next agent (one word only):"""
                     'agent': 'orchestrator',
                     'previous_output': {}
                 }
-            )
-
-            # ---------------- UPDATE STATUS ----------------
-            self._notify_agent_status(
-                "planner",
-                "queued",
-                None,
-                "Task queued for planner"
             )
 
             logger.info("Task successfully queued to planner")
