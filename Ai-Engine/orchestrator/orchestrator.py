@@ -40,9 +40,9 @@ class Orchestrator:
         self.channel = None
         
         # Database connection for agent status
-        database_url = os.getenv('DATABASE_URL')
-        if database_url:
-            self.db_config = {'dsn': database_url}
+        self.database_url = os.getenv("DATABASE_URL")
+        if self.database_url:
+            self.db_config = None
         else:
             self.db_config = {
                 'host': os.getenv('DB_HOST', 'localhost'),
