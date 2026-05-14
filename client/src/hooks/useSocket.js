@@ -118,6 +118,7 @@ export function useSocket(taskId) {
       }
       if (data.agentStatus) {
         Object.entries(data.agentStatus).forEach(([key, agent]) => {
+          if (!agent) return;
           updateAgentStatus(key, agent.status, agent.output);
         });
       }

@@ -182,7 +182,7 @@ export default function OpsRoom() {
     status,
     logsCount: logs.length,
     agentStatuses: Object.entries(agentStatus || {}).map(([k, v]) => ({
-      [k]: v.status,
+      [k]: v?.status || "idle",
     })),
   });
 }, [logs, status, taskId, agentStatus]);

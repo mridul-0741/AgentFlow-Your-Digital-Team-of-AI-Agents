@@ -25,6 +25,7 @@ export function useTaskPolling(taskId) {
         const agents = {};
         if (data.agentStatus) {
           Object.entries(data.agentStatus).forEach(([key, agent]) => {
+            if (!agent) return;
             agents[key] = {
               name: agent.name || `Agent ${key}`,
               role: agent.role || "Agent",
